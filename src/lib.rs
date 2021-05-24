@@ -5,10 +5,8 @@
 //! Windows and Linux (GTK) are supperted.
 //!
 //! # !!!Under Construction!!!
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+
+#[cfg(target_os = "linux")]
+mod linux;
+#[cfg(target_os = "windows")]
+mod windows;
