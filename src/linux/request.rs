@@ -2,20 +2,22 @@ use std::{ffi::{CStr, CString, c_void}, fs::{self, File}, io::Read};
 use gio_sys::GThemedIcon;
 use glib::{gobject_sys::g_object_unref, object::GObject};
 use glib_sys::g_free;
-use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default, gtk_init};
+use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default};
+
+use crate::{Error, InnerError};
 
 static mut DEFAULT_THEME: Option<*mut GtkIconTheme> = None;
 
-pub fn get_icon(ext: &str, size: i32) -> Vec<u8> {
-    let filename = get_icon_as_file(ext, size);
-    let mut f = File::open(&filename).expect("no file found");
-    let metadata = fs::metadata(&filename).expect("unable to read metadata");
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+    let filename = get_icon_as_file(ext, size)?;
+    let mut f = File::open(&filename)?;
+    let metadata = fs::metadata(&filename)?;
     let mut buffer = vec![0; metadata.len() as usize];
-    f.read(&mut buffer).expect("buffer overflow");    
-    buffer
+    f.read(&mut buffer)?;    
+    Ok(buffer)
 }
 
-pub fn get_icon_as_file(ext: &str, size: i32) -> String {
+pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
     let result: String;
     unsafe {
         let filename = CString::new(ext).unwrap();
@@ -31,7 +33,10 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> String {
             let theme = gtk_icon_theme_get_default();
             if theme.is_null() {
                 println!("Initializing GTK...");
-                gtk::init().unwrap();
+                match gtk::init() {
+                    Ok(_) => (),
+                    Err(_) => return Err(Error{ message: "Could not initialize Gtk".to_string(), inner_error: InnerError::GtkInitError })
+                }
             }
             let theme = gtk_icon_theme_get_default();
             DEFAULT_THEME = Some(theme);
@@ -40,15 +45,9 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> String {
         let icon_info = gtk_icon_theme_choose_icon(DEFAULT_THEME.unwrap(), icon_names, size, GTK_ICON_LOOKUP_NO_SVG);
         let filename = gtk_icon_info_get_filename(icon_info);
         let res_str = CStr::from_ptr(filename);
-        result = match res_str.to_str() {
-            Ok(str) => str.to_string(),
-            Err(err) => {
-                println!("Could not expand icon file name: {}", err);
-                "".to_string()
-            }
-        };
+        result = res_str.to_str()?.to_string();
         g_object_unref(icon as *mut GObject);
     }
-    result
+    Ok(result)
 }
 

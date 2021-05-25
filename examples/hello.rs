@@ -1,24 +1,21 @@
 use chrono::Utc;
 use serde::{Deserialize};
 use tokio;
-use tokio_util::codec::{BytesCodec, FramedRead};
-use warp::{Filter, Reply, fs::File, http::HeaderValue, hyper::{self, Body, HeaderMap, Response, StatusCode}};
-
-static NOTFOUND: &[u8] = b"Not Found";
+use warp::{Filter, Reply, fs::File, http::HeaderValue, hyper::{self, Body, HeaderMap, Response}};
 
 #[derive(Deserialize)]
 struct GetIcon {
     ext: String,
 }
 
-const SIZE: i32 = 16;
+const SIZE: i32 = 64;
 
 #[tokio::main]
 async fn main() {
     // gtk::init().unwrap();
 
     async fn get_icon(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
-        let bytes = systemicons::get_icon(&param.ext, SIZE);
+        let bytes = systemicons::get_icon(&param.ext, SIZE).unwrap();
         let body = hyper::Body::from(bytes);
         let mut response = Response::new(body);
         let headers = response.headers_mut();
@@ -64,14 +61,3 @@ fn create_headers() -> HeaderMap {
     header_map.insert("Server", HeaderValue::from_str("Mein Server").unwrap());
     header_map
 }
-
-
-fn not_found() -> Response<Body> {
-    Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .body(NOTFOUND.into())
-        .unwrap()
-}
-
-// TODO 64px .pdf 2ms 39.2 kB as file
-// TODO 64px .pdf 2ms 39.1 kB as buf
