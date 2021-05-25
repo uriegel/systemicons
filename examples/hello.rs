@@ -15,8 +15,7 @@ const SIZE: i32 = 16;
 
 #[tokio::main]
 async fn main() {
-
-    gtk::init().unwrap();
+    // gtk::init().unwrap();
 
     async fn get_icon(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
         let bytes = systemicons::get_icon(&param.ext, SIZE);
@@ -27,39 +26,6 @@ async fn main() {
         header_map.insert("Content-Type", HeaderValue::from_str("image/png").unwrap());
         headers.extend(header_map);
         Ok (response)        
-    }
-
-    async fn get_icon_as_file(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
-        let path = systemicons::get_icon_as_file(&param.ext, SIZE);
-
-        match tokio::fs::File::open(path.clone()).await {
-            Ok(file) => {
-                let stream = FramedRead::new(file, BytesCodec::new());
-                let body = hyper::Body::wrap_stream(stream);
-                let mut response = Response::new(body);
-
-                let headers = response.headers_mut();
-                let mut header_map = create_headers();
-                if let Some(ext_index) = path.rfind('.') {
-                    let ext = &path[ext_index..].to_lowercase();
-                    let content_type = match ext.as_str() {
-                        ".png" => "image/png".to_string(),
-                        ".svg" => "image/svg".to_string(),
-                        _ => "image/jpg".to_string(),
-                    };
-                    header_map.insert(
-                        "Content-Type",
-                        HeaderValue::from_str(&content_type).unwrap(),
-                    );
-                }
-                headers.extend(header_map);
-                Ok(response)
-            }
-            Err(err) => {
-                println!("Could not get icon: {}", err);
-                Ok(not_found())
-            }
-        }
     }
 
     let route_get_icon = warp::path("geticon")

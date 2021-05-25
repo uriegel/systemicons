@@ -2,7 +2,7 @@ use std::{ffi::{CStr, CString, c_void}, fs::{self, File}, io::Read};
 use gio_sys::GThemedIcon;
 use glib::{gobject_sys::g_object_unref, object::GObject};
 use glib_sys::g_free;
-use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default};
+use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default, gtk_init};
 
 static mut DEFAULT_THEME: Option<*mut GtkIconTheme> = None;
 
@@ -28,7 +28,13 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> String {
         let icon = gio_sys::g_content_type_get_icon(p_res);
         g_free(p_res as *mut c_void);
         if DEFAULT_THEME.is_none() {
-            DEFAULT_THEME = Some(gtk_icon_theme_get_default());
+            let theme = gtk_icon_theme_get_default();
+            if theme.is_null() {
+                println!("Initializing GTK...");
+                gtk::init().unwrap();
+            }
+            let theme = gtk_icon_theme_get_default();
+            DEFAULT_THEME = Some(theme);
         }
         let icon_names = gio_sys::g_themed_icon_get_names(icon as *mut GThemedIcon) as *mut *const i8;
         let icon_info = gtk_icon_theme_choose_icon(DEFAULT_THEME.unwrap(), icon_names, size, GTK_ICON_LOOKUP_NO_SVG);
