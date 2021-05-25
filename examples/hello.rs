@@ -6,16 +6,14 @@ use warp::{Filter, Reply, fs::File, http::HeaderValue, hyper::{self, Body, Heade
 #[derive(Deserialize)]
 struct GetIcon {
     ext: String,
+    size: i32
 }
-
-const SIZE: i32 = 64;
 
 #[tokio::main]
 async fn main() {
-    // gtk::init().unwrap();
 
     async fn get_icon(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
-        let bytes = systemicons::get_icon(&param.ext, SIZE).unwrap();
+        let bytes = systemicons::get_icon(&param.ext, param.size).unwrap();
         let body = hyper::Body::from(bytes);
         let mut response = Response::new(body);
         let headers = response.headers_mut();

@@ -8,7 +8,6 @@ license = "MIT"
 repository = "https://github.com/uriegel/systemicons"
 readme = "README.md"
 
-[dependencies]
 [target.'cfg(target_os="linux")'.dependencies]
 gio-sys = "0.10"
 glib = "0.10"
@@ -16,10 +15,14 @@ glib-sys = "0.10"
 gtk-sys = "0.10"
 gtk = "0.9"
 
+[target.'cfg(target_os="windows")'.dependencies]
+winapi = { version = "0.3", features = [ "winuser"]}
+winit = "0.25"
+image = "0.23"
+
 [dev-dependencies]
 tokio = { version = "1.5", features = ["full"] }
 warp = "0.3"
 chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-gtk = "0.9"
