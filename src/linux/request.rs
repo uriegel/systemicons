@@ -2,11 +2,11 @@ use std::ffi::{CStr, CString, c_void};
 use gio_sys::GThemedIcon;
 use glib::{gobject_sys::g_object_unref, object::GObject};
 use glib_sys::g_free;
-use gtk_sys::{GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default};
+use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default};
 
 static mut DEFAULT_THEME: Option<*mut GtkIconTheme> = None;
 
-pub fn get_icon(ext: &str) -> String {
+pub fn get_icon(ext: &str, size: i32) -> String {
     let result: String;
     unsafe {
         let filename = CString::new(ext).unwrap();
@@ -22,7 +22,7 @@ pub fn get_icon(ext: &str) -> String {
             DEFAULT_THEME = Some(gtk_icon_theme_get_default());
         }
         let icon_names = gio_sys::g_themed_icon_get_names(icon as *mut GThemedIcon) as *mut *const i8;
-        let icon_info = gtk_icon_theme_choose_icon(DEFAULT_THEME.unwrap(), icon_names, 16, 2);
+        let icon_info = gtk_icon_theme_choose_icon(DEFAULT_THEME.unwrap(), icon_names, size, GTK_ICON_LOOKUP_NO_SVG);
         let filename = gtk_icon_info_get_filename(icon_info);
         let res_str = CStr::from_ptr(filename);
         result = match res_str.to_str() {
