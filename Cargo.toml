@@ -1,6 +1,6 @@
 [package]
 name = "systemicons"
-version = "0.1.1"
+version = "0.2.0"
 description = "With this lib you can retrive the system icon which is associated to a certain file extension. The icon will be in the .png format. Windows and Linux (GTK) are supperted."
 authors = ["Uwe Riegel <uriegel@hotmail.de>"]
 edition = "2018"
