@@ -11,6 +11,9 @@ mod linux;
 #[cfg(target_os = "windows")]
 mod windows;
 
-pub fn get_icon(ext: &str, size: i32) -> String { 
+pub fn get_icon(ext: &str, size: i32) -> Vec<u8> { 
     linux::request::get_icon(ext, size)
+}
+pub fn get_icon_as_file(ext: &str, size: i32) -> String { 
+    linux::request::get_icon_as_file(ext, size)
 }

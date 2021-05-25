@@ -11,7 +11,7 @@ struct GetIcon {
     ext: String,
 }
 
-const SIZE: i32 = 64;
+const SIZE: i32 = 16;
 
 #[tokio::main]
 async fn main() {
@@ -19,7 +19,18 @@ async fn main() {
     gtk::init().unwrap();
 
     async fn get_icon(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
-        let path = systemicons::get_icon(&param.ext, SIZE);
+        let bytes = systemicons::get_icon(&param.ext, SIZE);
+        let body = hyper::Body::from(bytes);
+        let mut response = Response::new(body);
+        let headers = response.headers_mut();
+        let mut header_map = create_headers();
+        header_map.insert("Content-Type", HeaderValue::from_str("image/png").unwrap());
+        headers.extend(header_map);
+        Ok (response)        
+    }
+
+    async fn get_icon_as_file(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
+        let path = systemicons::get_icon_as_file(&param.ext, SIZE);
 
         match tokio::fs::File::open(path.clone()).await {
             Ok(file) => {
@@ -96,4 +107,5 @@ fn not_found() -> Response<Body> {
         .unwrap()
 }
 
-// TODO 64px .pdf 2ms 39.2 kB
+// TODO 64px .pdf 2ms 39.2 kB as file
+// TODO 64px .pdf 2ms 39.1 kB as buf

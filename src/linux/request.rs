@@ -1,4 +1,4 @@
-use std::ffi::{CStr, CString, c_void};
+use std::{ffi::{CStr, CString, c_void}, fs::{self, File}, io::Read};
 use gio_sys::GThemedIcon;
 use glib::{gobject_sys::g_object_unref, object::GObject};
 use glib_sys::g_free;
@@ -6,7 +6,16 @@ use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, 
 
 static mut DEFAULT_THEME: Option<*mut GtkIconTheme> = None;
 
-pub fn get_icon(ext: &str, size: i32) -> String {
+pub fn get_icon(ext: &str, size: i32) -> Vec<u8> {
+    let filename = get_icon_as_file(ext, size);
+    let mut f = File::open(&filename).expect("no file found");
+    let metadata = fs::metadata(&filename).expect("unable to read metadata");
+    let mut buffer = vec![0; metadata.len() as usize];
+    f.read(&mut buffer).expect("buffer overflow");    
+    buffer
+}
+
+pub fn get_icon_as_file(ext: &str, size: i32) -> String {
     let result: String;
     unsafe {
         let filename = CString::new(ext).unwrap();
