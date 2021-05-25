@@ -58,6 +58,6 @@ fn create_headers() -> HeaderMap {
     let now = Utc::now();
     let now_str = now.format("%a, %d %h %Y %T GMT").to_string();
     header_map.insert("Expires", HeaderValue::from_str(now_str.as_str()).unwrap());
-    header_map.insert("Server", HeaderValue::from_str("Mein Server").unwrap());
+    header_map.insert("Server", HeaderValue::from_str("My Server").unwrap());
     header_map
 }
