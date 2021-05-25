@@ -40,6 +40,7 @@ impl From<Utf8Error> for Error {
     }
 }
 
+#[cfg(target_os = "windows")]
 impl From<ImageError> for Error {
     fn from(error: ImageError) -> Self {
         Error {
@@ -61,6 +62,7 @@ impl fmt::Debug for InnerError {
             &InnerError::GtkInitError => "GtkInitError".to_string(),
             &InnerError::Utf8Error(_) => "Utf8Error".to_string(),
             &InnerError::IoError(_) => "IoError".to_string(),
+            #[cfg(target_os = "windows")]
             &InnerError::ImageError(_) => "ImageError".to_string()
         };
         write!(f, "(Error type: {}", res)
@@ -72,7 +74,7 @@ mod linux;
 #[cfg(target_os = "windows")]
 mod windows;
 
-/// Retrieving system icon. You have to specify the file extension and deisred icon size (like 16, 32 or 64).
+/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
 /// Returns the icon formatted as png as byte buffer.
 #[cfg(target_os = "linux")]
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
