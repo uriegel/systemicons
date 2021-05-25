@@ -61,9 +61,6 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
         let mut bytes = Vec::<u8>::with_capacity(complete_size);
         bytes.set_len(complete_size);
 
-        let padding: [u8; 1150] = [0; 1150];
-        ptr::copy_nonoverlapping(padding.as_ptr(), bytes.as_mut_ptr(), complete_size); 
-        
         let iconheader = ICONHEADER { 
             id_count: 1, // number of ICONDIRs
             id_reserved: 0, 
@@ -165,7 +162,7 @@ fn write_icon_data_to_memory(mem: &mut [u8], h_bitmap: HBITMAP, bmp: &BITMAP, bi
         // towards the top of the bitmap. Also, the bitmaps are stored in packed
         // in memory - scanlines are NOT 32bit aligned, just 1-after-the-other
         let mut pos = 0;
-        for i in (0..bmp.bmHeight - 1).rev() {
+        for i in (0..bmp.bmHeight).rev() {
             // Write the bitmap scanline
             
             ptr::copy_nonoverlapping(icon_data[(i * bmp.bmWidthBytes) as usize..].as_ptr(), mem[pos..].as_mut_ptr(), bmp.bmWidthBytes as usize); // 1 line of BYTES
