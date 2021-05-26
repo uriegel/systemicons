@@ -1,14 +1,16 @@
 use image::ImageFormat;
-use std::{mem, ptr};
+use std::{mem, ptr, time};
 use winapi::{STRUCT,
         shared::{minwindef::LPVOID, 
-            windef::{HGDIOBJ, HBITMAP}
+            windef::{HGDIOBJ, HBITMAP, HICON}
         },
         um::{
             wingdi::{BITMAPINFOHEADER, GetObjectW, BITMAP, PBITMAP, DeleteObject, GetBitmapBits},
             winnt::{HANDLE, FILE_ATTRIBUTE_NORMAL},
             winuser::{ GetIconInfo, ICONINFO, DestroyIcon},
-            shellapi::{SHGFI_TYPENAME, SHGFI_USEFILEATTRIBUTES, SHGFI_ICON, SHGetFileInfoW, SHFILEINFOW, SHGFI_LARGEICON, SHGFI_SMALLICON}
+            shellapi::{
+                SHGFI_TYPENAME, SHGFI_USEFILEATTRIBUTES, SHGFI_ICON, SHGetFileInfoW, SHFILEINFOW, SHGFI_LARGEICON, SHGFI_SMALLICON, ExtractIconExW
+            }
         }
     };
 use crate::Error;
@@ -24,13 +26,35 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
             szTypeName: [0; 80]
         };
         let file_info_size = mem::size_of_val(&file_info) as u32;
+        for _ in 0..3 {
+            // Sporadically this method returns 0!
+            SHGetFileInfoW(p_path.as_ptr(), FILE_ATTRIBUTE_NORMAL, &mut file_info, file_info_size, 
+            SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | if size > 16 { SHGFI_LARGEICON } else { SHGFI_SMALLICON });
+            if file_info.hIcon != ptr::null_mut() {
+                break;
+            } else {
+                let millis = time::Duration::from_millis(30);
+                std::thread::sleep(millis);
+            }
+        }
         SHGetFileInfoW(p_path.as_ptr(), FILE_ATTRIBUTE_NORMAL, &mut file_info, file_info_size, 
             SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | if size > 16 { SHGFI_LARGEICON } else { SHGFI_SMALLICON });
-        let icon = file_info.hIcon;
-
-        let mut icon_info = ICONINFO{ fIcon: 0, hbmColor: ptr::null_mut(), hbmMask: ptr::null_mut(), xHotspot: 0, yHotspot: 0 }; 
-        if GetIconInfo(icon, &mut icon_info) == 0 {
+        let mut icon = file_info.hIcon;
+        if icon == ptr::null_mut() {
+            let mut icon_large: HICON = ptr::null_mut();
+            let mut icon_small: HICON = ptr::null_mut();
+            let path = utf_16_null_terminiated("C:\\Windows\\system32\\SHELL32.dll");
+            ExtractIconExW(path.as_ptr(), 0, &mut icon_large, &mut icon_small, 1);
+            if size > 16 {
+                icon = icon_large;
+                DestroyIcon(icon_small);            
+            } else {
+                icon = icon_small;
+                DestroyIcon(icon_large);            
+            }
         }
+        let mut icon_info = ICONINFO{ fIcon: 0, hbmColor: ptr::null_mut(), hbmMask: ptr::null_mut(), xHotspot: 0, yHotspot: 0 }; 
+        GetIconInfo(icon, &mut icon_info);
         DestroyIcon(icon);
 
         let mut bmp_color = BITMAP { bmBits: ptr::null_mut(), bmBitsPixel: 0, bmHeight: 0, bmPlanes: 0, bmType: 0, bmWidth: 0, bmWidthBytes: 0};
