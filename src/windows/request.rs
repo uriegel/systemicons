@@ -63,7 +63,7 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
             let mut icon = extract_icon(ext, size);
             if icon == ptr::null_mut() {
                 if let Some(pos) = ext.find(".exe") {
-                    icon = get_icon_from_ext(&ext[pos..], size)        
+                    icon = get_icon_from_ext(&ext[pos..], size);        
                 } else {
                     icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);    
                 }
@@ -156,7 +156,7 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
         let pos = pos + info_header_size;
     
         // write the RGBQUAD color table (for 16 and 256 colour icons)
-        if bmp_color.bmBitsPixel == 2 || bmp_color.bmBitsPixel == 8 {  }        
+        if bmp_color.bmBitsPixel == 2 || bmp_color.bmBitsPixel == 8 { }        
 
         write_icon_data_to_memory(&mut bytes[pos..], icon_info.hbmColor, 
             &bmp_color, bitmap_bytes_count as usize);

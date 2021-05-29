@@ -2,7 +2,7 @@
 //! 
 //! With this lib you can retrive the system icon which is associated 
 //! to a certain file extension. The icon will be in the .png format. 
-//! Windows and Linux (GTK) are supperted.
+//! Windows and Linux (GTK) are supported.
 //! 
 //! When you specify an absolute path to a .exe file, then the icon is loaded from resource, if the exe contains an icon resource.
 use std::{fmt, str::Utf8Error};
