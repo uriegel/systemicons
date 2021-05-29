@@ -16,42 +16,64 @@ use winapi::{STRUCT,
 use crate::Error;
 
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
-    unsafe {
-        let p_path = utf_16_null_terminiated(ext);
-        let mut file_info = SHFILEINFOW {
-            dwAttributes: 0,
-            hIcon: ptr::null_mut(),
-            iIcon: 0,
-            szDisplayName: [0 as u16; 260],
-            szTypeName: [0; 80]
-        };
-        let file_info_size = mem::size_of_val(&file_info) as u32;
-        for _ in 0..3 {
-            // Sporadically this method returns 0!
-            SHGetFileInfoW(p_path.as_ptr(), FILE_ATTRIBUTE_NORMAL, &mut file_info, file_info_size, 
-            SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | if size > 16 { SHGFI_LARGEICON } else { SHGFI_SMALLICON });
-            if file_info.hIcon != ptr::null_mut() {
-                break;
-            } else {
-                let millis = time::Duration::from_millis(30);
-                std::thread::sleep(millis);
+
+    fn get_icon_from_ext(ext: &str, size: i32)->HICON {
+        unsafe {
+            let p_path = utf_16_null_terminiated(ext);
+            let mut file_info = SHFILEINFOW {
+                dwAttributes: 0,
+                hIcon: ptr::null_mut(),
+                iIcon: 0,
+                szDisplayName: [0 as u16; 260],
+                szTypeName: [0; 80]
+            };
+            let file_info_size = mem::size_of_val(&file_info) as u32;
+            for _ in 0..3 {
+                // Sporadically this method returns 0!
+                SHGetFileInfoW(p_path.as_ptr(), FILE_ATTRIBUTE_NORMAL, &mut file_info, file_info_size, 
+                SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | if size > 16 { SHGFI_LARGEICON } else { SHGFI_SMALLICON });
+                if file_info.hIcon != ptr::null_mut() {
+                    break;
+                } else {
+                    let millis = time::Duration::from_millis(30);
+                    std::thread::sleep(millis);
+                }
             }
+            file_info.hIcon
         }
-        SHGetFileInfoW(p_path.as_ptr(), FILE_ATTRIBUTE_NORMAL, &mut file_info, file_info_size, 
-            SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | if size > 16 { SHGFI_LARGEICON } else { SHGFI_SMALLICON });
-        let mut icon = file_info.hIcon;
-        if icon == ptr::null_mut() {
+    }
+
+    fn extract_icon(path: &str, size: i32)->HICON {
+        unsafe {
             let mut icon_large: HICON = ptr::null_mut();
             let mut icon_small: HICON = ptr::null_mut();
-            let path = utf_16_null_terminiated("C:\\Windows\\system32\\SHELL32.dll");
+            let path = utf_16_null_terminiated(path);
             ExtractIconExW(path.as_ptr(), 0, &mut icon_large, &mut icon_small, 1);
             if size > 16 {
-                icon = icon_large;
                 DestroyIcon(icon_small);            
+                icon_large
             } else {
-                icon = icon_small;
                 DestroyIcon(icon_large);            
+                icon_small
             }
+        }
+    }
+    unsafe {
+        let mut icon = if ext.to_lowercase().ends_with(".exe") {
+            let mut icon = extract_icon(ext, size);
+            if icon == ptr::null_mut() {
+                if let Some(pos) = ext.find(".exe") {
+                    icon = get_icon_from_ext(&ext[pos..], size)        
+                } else {
+                    icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);    
+                }
+            }
+            icon
+        } else {
+            get_icon_from_ext(ext, size)
+        };
+        if icon == ptr::null_mut() {
+            icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);
         }
         let mut icon_info = ICONINFO{ fIcon: 0, hbmColor: ptr::null_mut(), hbmMask: ptr::null_mut(), xHotspot: 0, yHotspot: 0 }; 
         GetIconInfo(icon, &mut icon_info);
