@@ -1,6 +1,6 @@
 [package]
 name = "systemicons"
-version = "0.3.0"
+version = "0.4.0"
 description = "With this lib you can retrive the system icon which is associated to a certain file extension. The icon will be in the .png format. Windows and Linux (GTK) are supperted."
 authors = ["Uwe Riegel <uriegel@hotmail.de>"]
 edition = "2018"
@@ -9,11 +9,11 @@ repository = "https://github.com/uriegel/systemicons"
 readme = "README.md"
 
 [target.'cfg(target_os="linux")'.dependencies]
-gio-sys = "0.10"
-glib = "0.10"
-glib-sys = "0.10"
-gtk-sys = "0.10"
-gtk = "0.9"
+gio-sys = "0.14"
+glib = "0.14"
+glib-sys = "0.14"
+gtk-sys = "0.14"
+gtk = "0.14"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winapi = { version = "0.3", features = [ "winuser"]}
@@ -21,7 +21,7 @@ winit = "0.25"
 image = "0.23"
 
 [dev-dependencies]
-tokio = { version = "1.5", features = ["full"] }
+tokio = { version = "1.8", features = ["full"] }
 warp = "0.3"
 chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }

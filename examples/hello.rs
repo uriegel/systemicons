@@ -9,8 +9,15 @@ struct GetIcon {
     size: i32
 }
 
+#[cfg(target_os = "linux")]
+fn init() { gtk::init().unwrap(); }
+    //println!("Affe"); }
+#[cfg(target_os = "windows")]
+fn init() { }
+
 #[tokio::main]
 async fn main() {
+    init();
 
     async fn get_icon(param: GetIcon) -> Result<impl warp::Reply, warp::Rejection> {
         let bytes = systemicons::get_icon(&param.ext, param.size).unwrap();

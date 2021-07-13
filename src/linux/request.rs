@@ -1,6 +1,6 @@
 use std::{ffi::{CStr, CString, c_void}, fs::{self, File}, io::Read};
 use gio_sys::GThemedIcon;
-use glib::{gobject_sys::g_object_unref, object::GObject};
+use glib::{gobject_ffi::g_object_unref, object::GObject};
 use glib_sys::g_free;
 use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default};
 
@@ -32,11 +32,8 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
         if DEFAULT_THEME.is_none() {
             let theme = gtk_icon_theme_get_default();
             if theme.is_null() {
-                println!("Initializing GTK...");
-                match gtk::init() {
-                    Ok(_) => (),
-                    Err(_) => return Err(Error{ message: "Could not initialize Gtk".to_string(), inner_error: InnerError::GtkInitError })
-                }
+                println!("You have to Initializing GTK!");
+                return Err(Error{ message: "You have to Initializing GTK!".to_string(), inner_error:  InnerError::GtkInitError})
             }
             let theme = gtk_icon_theme_get_default();
             DEFAULT_THEME = Some(theme);
