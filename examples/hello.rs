@@ -11,7 +11,6 @@ struct GetIcon {
 
 #[cfg(target_os = "linux")]
 fn init() { gtk::init().unwrap(); }
-    //println!("Affe"); }
 #[cfg(target_os = "windows")]
 fn init() { }
 
