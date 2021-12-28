@@ -32,8 +32,8 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
         if DEFAULT_THEME.is_none() {
             let theme = gtk_icon_theme_get_default();
             if theme.is_null() {
-                println!("You have to Initializing GTK!");
-                return Err(Error{ message: "You have to Initializing GTK!".to_string(), inner_error:  InnerError::GtkInitError})
+                println!("You have to initialize GTK!");
+                return Err(Error{ message: "You have to initialize GTK!".to_string(), inner_error:  InnerError::GtkInitError})
             }
             let theme = gtk_icon_theme_get_default();
             DEFAULT_THEME = Some(theme);
