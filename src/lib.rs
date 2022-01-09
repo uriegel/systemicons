@@ -93,3 +93,9 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
     linux::request::get_icon_as_file(ext, size)
 }
+
+/// In a non GTK program you have to initialize GTK when getting system icons (Linux)-
+#[cfg(target_os = "linux")]
+pub fn init() {
+    linux::request::init()
+}

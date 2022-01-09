@@ -48,3 +48,5 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
     Ok(result)
 }
 
+pub fn init() { gtk::init().unwrap(); }
+
