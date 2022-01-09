@@ -86,3 +86,10 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
     windows::request::get_icon(ext, size)
 }
+
+/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
+/// Returns the path to the system icon.
+#[cfg(target_os = "linux")]
+pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
+    linux::request::get_icon_as_file(ext, size)
+}
