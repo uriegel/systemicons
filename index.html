@@ -1,45 +1,73 @@
 <html>
-    <head>
-        <title>Rust System Icons</title>
-        <meta charset="utf-8"/>
-        <style>
-            body{
-                background-color: gray;
-            }
-            .ico {
-                width: 64px;
-                height: 64px;
-            }
-            .smallico {
-                width: 16px;
-                height: 16px;
-            }
-        </style>
-    </head>
+  <head>
+    <title>Rust System Icons</title>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        background-color: gray;
+      }
 
-    <body>
-        <h1>Rust System Icons</h1>
-        <p>
-            This is a sample page for displaying in <em>Rust System Icons</em>
-        </p>
-        <p>
-            <img class="ico" src="geticon?ext=c:\\windows\\explorer.exe&size=64"/>
-        </p>
-        <p>
-            <img class="ico" src="geticon?ext=c:\\windows\\hh.exe&size=64"/>
-        </p>
-        <p>
-            <img class="ico" src="geticon?ext=c:\\windows\\nofilefound.exe&size=64"/>
-        </p>
-        <p>
-            <img class="ico" src="geticon?ext=.pdf&size=64"/>
-        </p>
-        <p>
-            <img class="smallico" src="geticon?ext=.pdf&size=16"/>
-        </p>
-        <p>
-            <img class="smallico" src="geticon?ext=&size=16"/>
-        </p>
+      .ico {
+        width: 64px;
+        height: 64px;
+      }
 
-    </body> 
+      .ico--md {
+        width: 32px;
+        height: 32px;
+      }
+
+      .icon--sm {
+        width: 16px;
+        height: 16px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Rust System Icons</h1>
+    <p>This is a sample page for displaying in <em>Rust System Icons</em></p>
+    <p>
+      <img class="ico" src="geticon?ext=c:\\windows\\explorer.exe&size=64" />
+    </p>
+    <p>
+      <img class="ico" src="geticon?ext=c:\\windows\\hh.exe&size=64" />
+    </p>
+    <p>
+      <img class="ico" src="geticon?ext=c:\\windows\\nofilefound.exe&size=64" />
+    </p>
+    <p>
+      <img class="ico" src="geticon?ext=.pdf&size=64" />
+    </p>
+    <p>
+      <img class="icon--sm" src="geticon?ext=.pdf&size=16" />
+    </p>
+    <p>
+      <img class="icon--sm" src="geticon?ext=&size=16" />
+    </p>
+    <p>
+      <img
+        class="ico"
+        src="geticon?ext=/System/Applications/Utilities/Activity Monitor.app&size=64"
+      />
+    </p>
+    <p>
+      <img
+        class="ico"
+        src="geticon?ext=/System/Library/CoreServices/Finder.app&size=64"
+      />
+    </p>
+    <p>
+      <img
+        class="ico--md"
+        src="geticon?ext=/System/Applications/Notes.app&size=32"
+      />
+    </p>
+    <p>
+      <img
+        class="ico--sm"
+        src="geticon?ext=/System/Applications/Messages.app&size=16"
+      />
+    </p>
+  </body>
 </html>
