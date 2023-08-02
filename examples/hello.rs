@@ -1,18 +1,27 @@
 use chrono::Utc;
-use serde::{Deserialize};
+use serde::Deserialize;
 use tokio;
-use warp::{Filter, Reply, fs::File, http::HeaderValue, hyper::{self, Body, HeaderMap, Response}};
+use warp::{
+    fs::File,
+    http::HeaderValue,
+    hyper::{self, Body, HeaderMap, Response},
+    Filter, Reply,
+};
 
 #[derive(Deserialize)]
 struct GetIcon {
     ext: String,
-    size: i32
+    size: i32,
 }
 
 #[cfg(target_os = "linux")]
-fn init() { gtk::init().unwrap(); }
+fn init() {
+    gtk::init().unwrap();
+}
 #[cfg(target_os = "windows")]
-fn init() { }
+fn init() {}
+#[cfg(target_os = "macos")]
+fn init() {}
 
 #[tokio::main]
 async fn main() {
@@ -26,7 +35,7 @@ async fn main() {
         let mut header_map = create_headers();
         header_map.insert("Content-Type", HeaderValue::from_str("image/png").unwrap());
         headers.extend(header_map);
-        Ok (response)        
+        Ok(response)
     }
 
     let route_get_icon = warp::path("geticon")
@@ -49,8 +58,7 @@ async fn main() {
 
     let route = warp::fs::dir(".").map(add_headers);
 
-    let routes = route
-        .or(route_get_icon);
+    let routes = route.or(route_get_icon);
 
     let port = 8888;
     println!("Serving example on http://localhost:{}", port);
