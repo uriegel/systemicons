@@ -1,6 +1,6 @@
 use std::{ffi::{CStr, CString, c_void}, fs::{self, File}, io::Read};
 use gio_sys::GThemedIcon;
-use glib::{gobject_ffi::g_object_unref, object::GObject};
+use glib::gobject_ffi::{g_object_unref, GObject};
 use glib_sys::g_free;
 use gtk_sys::{GTK_ICON_LOOKUP_NO_SVG, GtkIconTheme, gtk_icon_info_get_filename, gtk_icon_theme_choose_icon, gtk_icon_theme_get_default};
 
