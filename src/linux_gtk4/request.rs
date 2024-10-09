@@ -1,7 +1,7 @@
 use std::{env, fs::{self, File}, io::Read, path::PathBuf, process::Command};
 
-use gtk::{gdk::Display, gio, IconTheme};
-use gtk::prelude::*;
+use gtk4::{gdk::Display, gio, IconTheme};
+use gtk4::prelude::*;
 
 use crate::{Error, InnerError};
 
