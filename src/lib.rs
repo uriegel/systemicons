@@ -5,6 +5,11 @@
 //! Windows and Linux (GTK) are supported.
 //!
 //! When you specify an absolute path to a .exe file, then the icon is loaded from resource, if the exe contains an icon resource.
+//!
+//! ## Breaking changes in crate version > 1.0.0
+//! 
+//! * Using GTK 4 instead of GTK 3 on Linux 
+
 #[cfg(target_os = "windows")]
 use image::ImageError;
 use std::{fmt, str::Utf8Error};
