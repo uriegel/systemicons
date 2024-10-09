@@ -3,6 +3,8 @@ use std::{env, fs::{self, File}, io::Read, path::{Path, PathBuf}, process::Comma
 use gtk4::{gdk::Display, gio, IconTheme};
 use gtk4::prelude::*;
 
+use std::os::unix::fs::PermissionsExt;
+
 use crate::{Error, InnerError};
 
 // static mut DEFAULT_THEME: Option<*mut GtkIconTheme> = None;
@@ -59,16 +61,18 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
 
 pub fn init() { 
     let bytes = include_bytes!("../../assets/daemon");
-    let app_data = std::env::var("HOME").expect("No APP_DATA directory");
+    let app_data = std::env::var("HOME").expect("No home directory");
     let local_path = Path::new(&app_data).join(".config").join("de.uriegel.systemicons");
     if !fs::exists(local_path.clone()).expect("Could not access local directory") 
         { fs::create_dir(local_path.clone()).expect("Could not create local directory") } 
     let path_app = local_path.join("daemon");
     fs::write(path_app.clone(), bytes).expect("Unable to write daemon");
 
+    let mut perms = fs::metadata(path_app.clone()).unwrap().permissions();
+    perms.set_mode(755);
+    std::fs::set_permissions(path_app.clone(), perms);
 
-    let current_exe = env::current_exe().expect("Failed to get current executable");
-    Command::new(current_exe)
+    Command::new(path_app)
         .arg("child-process")
         .spawn()
         .expect("Failed to spawn child process");    
