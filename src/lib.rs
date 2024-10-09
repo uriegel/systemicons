@@ -122,3 +122,4 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
     macos::request::get_icon_as_file(ext, size.into())
 }
+

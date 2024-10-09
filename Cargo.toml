@@ -17,13 +17,18 @@ path = "src/linux_gtk4/bin/main.rs"
 
 [features]
 default=[]
-gtk-3 = []
+gtk-3 = ["gio-sys", "glib", "glib-sys", "gtk-sys", "gtk"]
 gtk-4 = ["gtk4"]
 
 exclusive = ["gtk-3", "gtk-4"]
 
 [target.'cfg(target_os="linux" )'.dependencies]
 gtk4 = { version = "0.9.2", optional = true }
+gio-sys = { version = "0.18", optional = true }
+glib = { version = "0.18", optional = true }
+glib-sys = { version = "0.18", optional = true }
+gtk-sys = { version = "0.18", optional = true }
+gtk = { version = "0.18", optional = true }
 
 [target.'cfg(target_os="windows")'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }
@@ -40,3 +45,4 @@ warp = "0.3"
 chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
