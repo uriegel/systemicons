@@ -48,16 +48,6 @@ impl From<Utf8Error> for Error {
     }
 }
 
-#[cfg(target_os = "windows")]
-impl From<ImageError> for Error {
-    fn from(error: ImageError) -> Self {
-        Error {
-            message: error.to_string(),
-            inner_error: InnerError::ImageError(error),
-        }
-    }
-}
-
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {:?})", self.message, self.inner_error)
@@ -75,6 +65,17 @@ impl fmt::Debug for InnerError {
             &InnerError::Generic => "Generic".to_string()
         };
         write!(f, "(Error type: {}", res)
+    }
+}
+
+
+#[cfg(target_os = "windows")]
+impl From<ImageError> for Error {
+    fn from(error: ImageError) -> Self {
+        Error {
+            message: error.to_string(),
+            inner_error: InnerError::ImageError(error),
+        }
     }
 }
 
