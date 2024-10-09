@@ -1,4 +1,7 @@
-use std::{fs::{self, File}, io::Read};
+use std::{env, fs::{self, File}, io::Read, path::PathBuf, process::Command};
+
+use gtk::{gdk::Display, gio, IconTheme};
+use gtk::prelude::*;
 
 use crate::{Error, InnerError};
 
@@ -14,7 +17,12 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 }
 
 pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
-    let display = Display::default()?;
+    let display = Display::default()
+        .ok_or(Error{ inner_error: InnerError::GtkInitError, message: "In Linux, you have to initialize GTK with ```systemicons::init()```".to_string()})?;
+    let theme = IconTheme::for_display(&display); 
+    let mime = gio::content_type_guess(Some(&PathBuf::from(ext)) , &[]);   
+    println!("MIME {}", mime.0.to_string());
+
     // let result: String;
     // unsafe {
     //     let filename = CString::new(ext).unwrap();
@@ -45,10 +53,18 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
     // Ok(result)
     Err(Error {
         message: "not implemented".to_string(),
-        inner_error: InnerError::GtkInitError
+        inner_error: InnerError::Generic
     })
 }
 
-//pub fn init() { gtk::init().unwrap(); }
-pub fn init() {  }
+pub fn init() { 
+    let current_exe = env::current_exe().expect("Failed to get current executable");
+    Command::new(current_exe)
+        .arg("child-process")
+        .spawn()
+        .expect("Failed to spawn child process");    
+}
 
+pub fn main() {
+    println!("Das binich im Mein");
+}

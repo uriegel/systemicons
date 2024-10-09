@@ -21,6 +21,7 @@ pub enum InnerError {
     GtkInitError,
     #[cfg(target_os = "windows")]
     ImageError(ImageError),
+    Generic
 }
 
 /// Possible Error
@@ -66,11 +67,12 @@ impl fmt::Debug for Error {
 impl fmt::Debug for InnerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let res = match self {
-            &InnerError::GtkInitError => "GtkInitError".to_string(),
-            &InnerError::Utf8Error(_) => "Utf8Error".to_string(),
-            &InnerError::IoError(_) => "IoError".to_string(),
+            &InnerError::GtkInitError => "GtkInit".to_string(),
+            &InnerError::Utf8Error(_) => "Utf8".to_string(),
+            &InnerError::IoError(_) => "Io".to_string(),
             #[cfg(target_os = "windows")]
-            &InnerError::ImageError(_) => "ImageError".to_string(),
+            &InnerError::ImageError(_) => "Image".to_string(),
+            &InnerError::Generic => "Generic".to_string()
         };
         write!(f, "(Error type: {}", res)
     }
@@ -102,8 +104,8 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
 }
 
 /// In a non GTK program you have to initialize GTK when getting system icons (Linux)-
-#[cfg(target_os = "linux")]
 pub fn init() {
+    #[cfg(target_os = "linux")]
     linux::request::init()
 }
 

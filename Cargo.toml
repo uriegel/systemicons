@@ -11,6 +11,10 @@ license = "MIT"
 repository = "https://github.com/uriegel/systemicons"
 readme = "README.md"
 
+[[bin]]
+name = "daemon"
+path = "src/linux/bin/main.rs"
+
 [target.'cfg(target_os="linux")'.dependencies]
 gtk = { version = "0.9.2", package = "gtk4" }
 
