@@ -1,4 +1,4 @@
-use std::{env, fs::{self, File}, io::Read, path::PathBuf, process::Command};
+use std::{env, fs::{self, File}, io::Read, path::{Path, PathBuf}, process::Command};
 
 use gtk4::{gdk::Display, gio, IconTheme};
 use gtk4::prelude::*;
@@ -58,6 +58,15 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
 }
 
 pub fn init() { 
+    let bytes = include_bytes!("../../assets/daemon");
+    let app_data = std::env::var("HOME").expect("No APP_DATA directory");
+    let local_path = Path::new(&app_data).join(".config").join("de.uriegel.systemicons");
+    if !fs::exists(local_path.clone()).expect("Could not access local directory") 
+        { fs::create_dir(local_path.clone()).expect("Could not create local directory") } 
+    let path_app = local_path.join("daemon");
+    fs::write(path_app.clone(), bytes).expect("Unable to write daemon");
+
+
     let current_exe = env::current_exe().expect("Failed to get current executable");
     Command::new(current_exe)
         .arg("child-process")
