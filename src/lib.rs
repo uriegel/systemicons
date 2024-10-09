@@ -80,6 +80,8 @@ impl fmt::Debug for InnerError {
 
 #[cfg(all(target_os = "linux", feature = "gtk-4"))]
 mod linux_gtk4;
+#[cfg(all(target_os = "linux", feature = "gtk-3"))]
+mod linux_gtk3;
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "windows")]
@@ -90,6 +92,10 @@ mod windows;
 #[cfg(all(target_os = "linux", feature = "gtk-4"))]
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
     linux_gtk4::request::get_icon(ext, size)
+}
+#[cfg(all(target_os = "linux", feature = "gtk-3"))]
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+    linux_gtk3::request::get_icon(ext, size)
 }
 #[cfg(target_os = "windows")]
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
@@ -106,7 +112,9 @@ pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
 /// In a non GTK program you have to initialize GTK when getting system icons (Linux)-
 pub fn init() {
     #[cfg(all(target_os = "linux", feature = "gtk-4"))]
-    linux_gtk4::request::init()
+    linux_gtk4::request::init();
+    #[cfg(all(target_os = "linux", feature = "gtk-3"))]
+    linux_gtk3::request::init();
 }
 
 /// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).

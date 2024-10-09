@@ -7,12 +7,32 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug example 'hello'",
+            "name": "Debug example 'hello GTK 4'",
             "cargo": {
                 "args": [
                     "build",
                     "--example=hello",
-                    "--package=systemicons"
+                    "--package=systemicons",
+                    "--features=gtk-4"
+                ],
+                "filter": {
+                    "name": "hello",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'hello GTK 3'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=hello",
+                    "--package=systemicons",
+                    "--features=gtk-3"
                 ],
                 "filter": {
                     "name": "hello",

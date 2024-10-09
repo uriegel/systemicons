@@ -1,5 +1,6 @@
 use chrono::Utc;
 use serde::Deserialize;
+use systemicons::init;
 use tokio;
 use warp::{
     fs::File,
@@ -13,15 +14,6 @@ struct GetIcon {
     ext: String,
     size: i32,
 }
-
-#[cfg(target_os = "linux")]
-// fn init() {
-//     gtk::init().unwrap();
-// }
-#[cfg(target_os = "windows")]
-fn init() {}
-#[cfg(target_os = "macos")]
-fn init() {}
 
 #[tokio::main]
 async fn main() {
