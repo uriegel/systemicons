@@ -7,7 +7,6 @@
 //! When you specify an absolute path to a .exe file, then the icon is loaded from resource, if the exe contains an icon resource.
 #[cfg(target_os = "windows")]
 use image::ImageError;
-
 use std::{fmt, str::Utf8Error};
 
 /// Inner Error type of possible Error
@@ -39,6 +38,16 @@ impl From<Utf8Error> for Error {
         Error {
             message: error.to_string(),
             inner_error: InnerError::Utf8Error(error),
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+impl From<ImageError> for Error {
+    fn from(error: ImageError) -> Self {
+        Error {
+            message: error.to_string(),
+            inner_error: InnerError::ImageError(error),
         }
     }
 }

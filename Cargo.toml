@@ -6,7 +6,7 @@ authors = [
     "Uwe Riegel <uriegel@hotmail.de>",
     "Victor Aremu <victor.olorunbumi@gmail.com>",
 ]
-edition = "2021"
+edition = "2018"
 license = "MIT"
 repository = "https://github.com/uriegel/systemicons"
 readme = "README.md"
@@ -19,8 +19,9 @@ gtk-sys = "0.18"
 gtk = "0.18"
 
 [target.'cfg(target_os="windows")'.dependencies]
-windows = { version = "0.58.0", features = ["Win32_UI_Shell", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging", "Win32_Storage_FileSystem"] }
-image = "0.25.4"
+winapi = { version = "0.3", features = ["winuser"] }
+winit = "0.25"
+image = "0.23"
 
 [target.'cfg(target_os="macos")'.dependencies]
 cocoa = "0.24.0"
