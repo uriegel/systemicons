@@ -7,10 +7,20 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug",
-            "program": "${workspaceFolder}/<your program>",
+            "name": "Debug example 'hello'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=hello",
+                    "--package=systemicons"
+                ],
+                "filter": {
+                    "name": "hello",
+                    "kind": "example"
+                }
+            },
             "args": [],
             "cwd": "${workspaceFolder}"
-        }
+        },
     ]
 }
