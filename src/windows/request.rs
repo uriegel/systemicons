@@ -1,38 +1,44 @@
 use image::ImageFormat;
 use std::{io::Cursor, mem, ptr, time};
-use winapi::{STRUCT,
-        shared::{minwindef::LPVOID, 
-            windef::{HGDIOBJ, HBITMAP, HICON}
-        },
-        um::{
-            wingdi::{BITMAPINFOHEADER, GetObjectW, BITMAP, PBITMAP, DeleteObject, GetBitmapBits},
-            winnt::{HANDLE, FILE_ATTRIBUTE_NORMAL},
-            winuser::{ GetIconInfo, ICONINFO, DestroyIcon},
-            shellapi::{
-                SHGFI_TYPENAME, SHGFI_USEFILEATTRIBUTES, SHGFI_ICON, SHGetFileInfoW, SHFILEINFOW, SHGFI_LARGEICON, SHGFI_SMALLICON, ExtractIconExW
-            }
-        }
-    };
+use windows::{
+    core::PCWSTR,
+    Win32::{
+        Foundation::FALSE, Graphics::Gdi::{
+            DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER, HBITMAP
+        }, Storage::FileSystem::FILE_ATTRIBUTE_NORMAL, UI::{
+            Shell::{
+                ExtractIconExW, SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON, SHGFI_SMALLICON, SHGFI_TYPENAME, SHGFI_USEFILEATTRIBUTES
+        }, WindowsAndMessaging::{DestroyIcon, GetIconInfo, HICON, ICONINFO}}
+    },
+};
 use crate::Error;
 
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
-
-    fn get_icon_from_ext(ext: &str, size: i32)->HICON {
+    fn get_icon_from_ext(ext: &str, size: i32) -> HICON {
         unsafe {
-            let p_path = utf_16_null_terminiated(ext);
+            let p_path = utf_16_null_terminated(ext);
             let mut file_info = SHFILEINFOW {
                 dwAttributes: 0,
-                hIcon: ptr::null_mut(),
+                hIcon: HICON::default(),
                 iIcon: 0,
-                szDisplayName: [0 as u16; 260],
-                szTypeName: [0; 80]
+                szDisplayName: [0; 260],
+                szTypeName: [0; 80],
             };
             let file_info_size = mem::size_of_val(&file_info) as u32;
             for _ in 0..3 {
-                // Sporadically this method returns 0!
-                SHGetFileInfoW(p_path.as_ptr(), FILE_ATTRIBUTE_NORMAL, &mut file_info, file_info_size, 
-                SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME | if size > 16 { SHGFI_LARGEICON } else { SHGFI_SMALLICON });
-                if file_info.hIcon != ptr::null_mut() {
+                SHGetFileInfoW(
+                    PCWSTR(p_path.as_ptr()),
+                    FILE_ATTRIBUTE_NORMAL,
+                    Some(&mut file_info),
+                    file_info_size,
+                    SHGFI_ICON | SHGFI_USEFILEATTRIBUTES | SHGFI_TYPENAME
+                        | if size > 16 {
+                            SHGFI_LARGEICON
+                        } else {
+                            SHGFI_SMALLICON
+                        },
+                );
+                if !file_info.hIcon.is_invalid() {
                     break;
                 } else {
                     let millis = time::Duration::from_millis(30);
@@ -43,46 +49,77 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
         }
     }
 
-    fn extract_icon(path: &str, size: i32)->HICON {
+    fn extract_icon(path: &str, size: i32) -> HICON {
         unsafe {
-            let mut icon_large: HICON = ptr::null_mut();
-            let mut icon_small: HICON = ptr::null_mut();
-            let path = utf_16_null_terminiated(path);
-            ExtractIconExW(path.as_ptr(), 0, &mut icon_large, &mut icon_small, 1);
+            let mut icon_large = HICON::default();
+            let mut icon_small = HICON::default();
+            let path = utf_16_null_terminated(path);
+            ExtractIconExW(
+                PCWSTR(path.as_ptr()),
+                0,
+                Some(&mut icon_large),
+                Some(&mut icon_small),
+                1,
+            );
             if size > 16 {
-                DestroyIcon(icon_small);            
+                let _ = DestroyIcon(icon_small);
                 icon_large
             } else {
-                DestroyIcon(icon_large);            
+                let _ = DestroyIcon(icon_large);
                 icon_small
             }
         }
     }
+
     unsafe {
         let mut icon = if ext.to_lowercase().ends_with(".exe") {
             let mut icon = extract_icon(ext, size);
-            if icon == ptr::null_mut() {
+            if icon.is_invalid() {
                 if let Some(pos) = ext.find(".exe") {
-                    icon = get_icon_from_ext(&ext[pos..], size);        
+                    icon = get_icon_from_ext(&ext[pos..], size);
                 } else {
-                    icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);    
+                    icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);
                 }
             }
             icon
         } else {
             get_icon_from_ext(ext, size)
         };
-        if icon == ptr::null_mut() {
+        if icon.is_invalid() {
             icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);
         }
-        let mut icon_info = ICONINFO{ fIcon: 0, hbmColor: ptr::null_mut(), hbmMask: ptr::null_mut(), xHotspot: 0, yHotspot: 0 }; 
-        GetIconInfo(icon, &mut icon_info);
-        DestroyIcon(icon);
 
-        let mut bmp_color = BITMAP { bmBits: ptr::null_mut(), bmBitsPixel: 0, bmHeight: 0, bmPlanes: 0, bmType: 0, bmWidth: 0, bmWidthBytes: 0};
-        GetObjectW(icon_info.hbmColor as HANDLE, mem::size_of_val(&bmp_color) as i32, &mut bmp_color as PBITMAP as LPVOID);
-        let mut bmp_mask = BITMAP { bmBits: ptr::null_mut(), bmBitsPixel: 0, bmHeight: 0, bmPlanes: 0, bmType: 0, bmWidth: 0, bmWidthBytes: 0};
-        GetObjectW(icon_info.hbmMask as HANDLE, mem::size_of_val(&bmp_mask) as i32, &mut bmp_mask as PBITMAP as LPVOID);
+        let mut icon_info = ICONINFO {
+            fIcon: FALSE,
+            hbmColor: HBITMAP::default(),
+            hbmMask: HBITMAP::default(),
+            xHotspot: 0,
+            yHotspot: 0,
+        };
+        GetIconInfo(icon, &mut icon_info)?;
+        let _ = DestroyIcon(icon);
+
+        let mut bmp_color = BITMAP {
+            bmBits: ptr::null_mut(),
+            bmBitsPixel: 0,
+            bmHeight: 0,
+            bmPlanes: 0,
+            bmType: 0,
+            bmWidth: 0,
+            bmWidthBytes: 0,
+        };
+        GetObjectW(icon_info.hbmColor, mem::size_of_val(&bmp_color) as i32, Some(&mut bmp_color as *mut _ as *mut _));
+
+        let mut bmp_mask = BITMAP {
+            bmBits: ptr::null_mut(),
+            bmBitsPixel: 0,
+            bmHeight: 0,
+            bmPlanes: 0,
+            bmType: 0,
+            bmWidth: 0,
+            bmWidthBytes: 0,
+        };
+        GetObjectW(icon_info.hbmMask, mem::size_of_val(&bmp_mask) as i32, Some(&mut bmp_mask as *mut _ as *mut _));
 
         fn get_bitmap_count(bitmap: &BITMAP)->i32 {
             let mut n_width_bytes = bitmap.bmWidthBytes;
@@ -164,29 +201,34 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
         write_icon_data_to_memory(&mut bytes[pos..], icon_info.hbmMask, 
             &bmp_mask, mask_bytes_count as usize);
 
-        let im = image::load_from_memory(&bytes)?;
+
+        let im = image::load_from_memory(&bytes)?; // Assuming bytes contains valid icon data
         let mut png_bytes: Vec<u8> = Vec::new();
         let mut cursor = Cursor::new(&mut png_bytes);
         im.write_to(&mut cursor, ImageFormat::Png)?;
 
-        DeleteObject(icon_info.hbmColor as HGDIOBJ);
-        DeleteObject(icon_info.hbmMask as HGDIOBJ);
+        let _ = DeleteObject(icon_info.hbmColor);
+        let _ = DeleteObject(icon_info.hbmMask);
 
         Ok(png_bytes)
     }
 }
 
-fn utf_16_null_terminiated(x: &str) -> Vec<u16> {
+fn utf_16_null_terminated(x: &str) -> Vec<u16> {
     x.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
-STRUCT!{#[debug] struct ICONHEADER {
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ICONHEADER {
     id_reserved: i16, 
     id_type: i16,
     id_count: i16,
-}}
+}
 
-STRUCT!{#[debug] struct ICONDIR {
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ICONDIR {
     b_width: u8,
     b_height: u8,
     b_color_count: u8,
@@ -195,14 +237,14 @@ STRUCT!{#[debug] struct ICONDIR {
     w_bit_count: u16, // for cursors, this field = wYHotSpot
     dw_bytes_in_res: u32,
     dw_image_offset: u32, // file-offset to the start of ICONIMAGE
-}}
+}
 
 fn write_icon_data_to_memory(mem: &mut [u8], h_bitmap: HBITMAP, bmp: &BITMAP, bitmap_byte_count: usize) {
     unsafe {
         let mut icon_data = Vec::<u8>::with_capacity(bitmap_byte_count);
         icon_data.set_len(bitmap_byte_count);
 
-        GetBitmapBits(h_bitmap, bitmap_byte_count as i32, icon_data.as_mut_ptr() as LPVOID);
+        GetBitmapBits(h_bitmap, bitmap_byte_count as i32, icon_data.as_mut_ptr() as *mut _);
 
         // bitmaps are stored inverted (vertically) when on disk..
         // so write out each line in turn, starting at the bottom + working

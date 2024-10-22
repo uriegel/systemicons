@@ -7,6 +7,8 @@
 //! When you specify an absolute path to a .exe file, then the icon is loaded from resource, if the exe contains an icon resource.
 #[cfg(target_os = "windows")]
 use image::ImageError;
+#[cfg(target_os = "windows")]
+use ::windows::core::Error as WinError;
 use std::{fmt, str::Utf8Error};
 
 /// Inner Error type of possible Error
@@ -16,6 +18,8 @@ pub enum InnerError {
     GtkInitError,
     #[cfg(target_os = "windows")]
     ImageError(ImageError),
+    #[cfg(target_os = "windows")]
+    WinError(WinError),
 }
 
 /// Possible Error
@@ -42,16 +46,6 @@ impl From<Utf8Error> for Error {
     }
 }
 
-#[cfg(target_os = "windows")]
-impl From<ImageError> for Error {
-    fn from(error: ImageError) -> Self {
-        Error {
-            message: error.to_string(),
-            inner_error: InnerError::ImageError(error),
-        }
-    }
-}
-
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {:?})", self.message, self.inner_error)
@@ -66,6 +60,8 @@ impl fmt::Debug for InnerError {
             &InnerError::IoError(_) => "IoError".to_string(),
             #[cfg(target_os = "windows")]
             &InnerError::ImageError(_) => "ImageError".to_string(),
+            #[cfg(target_os = "windows")]
+            &InnerError::WinError(_) => "WinError".to_string(),
         };
         write!(f, "(Error type: {}", res)
     }
