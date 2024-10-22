@@ -1,5 +1,5 @@
 use image::ImageFormat;
-use std::{mem, ptr, time};
+use std::{io::Cursor, mem, ptr, time};
 use winapi::{STRUCT,
         shared::{minwindef::LPVOID, 
             windef::{HGDIOBJ, HBITMAP, HICON}
@@ -166,7 +166,8 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 
         let im = image::load_from_memory(&bytes)?;
         let mut png_bytes: Vec<u8> = Vec::new();
-        im.write_to(&mut png_bytes, ImageFormat::Png)?;
+        let mut cursor = Cursor::new(&mut png_bytes);
+        im.write_to(&mut cursor, ImageFormat::Png)?;
 
         DeleteObject(icon_info.hbmColor as HGDIOBJ);
         DeleteObject(icon_info.hbmMask as HGDIOBJ);
