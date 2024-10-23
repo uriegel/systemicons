@@ -4,7 +4,7 @@ mod drop;
 use image::ImageError;
 use windows::core::Error as WinError;
 
-use crate::error::{Error, InnerError};
+use crate::{Error, InnerError};
 
 impl From<ImageError> for Error {
     fn from(error: ImageError) -> Self {

@@ -12,7 +12,7 @@ use windows::{
 };
 use image::{ImageBuffer, ImageFormat, Rgba};
 
-use crate::error::Error;
+use crate::Error;
 
 use super::drop::{BitmapDropper, DcDropper, IconDropper};
 
