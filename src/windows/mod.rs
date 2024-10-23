@@ -1,9 +1,10 @@
 pub mod request;
+mod drop;
 
 use image::ImageError;
 use windows::core::Error as WinError;
 
-use crate::{Error, InnerError};
+use crate::error::{Error, InnerError};
 
 impl From<ImageError> for Error {
     fn from(error: ImageError) -> Self {
