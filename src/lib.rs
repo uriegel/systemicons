@@ -13,7 +13,7 @@ mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
-mod error;
+pub mod error;
 
 use error::Error;
 
