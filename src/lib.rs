@@ -15,16 +15,14 @@ mod windows;
 
 pub mod error;
 
-use error::Error;
-
 /// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
 /// Returns the icon formatted as png as byte buffer.
 #[cfg(target_os = "linux")]
-pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, error::Error> {
     crate::linux::request::get_icon(ext, size)
 }
 #[cfg(target_os = "windows")]
-pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, error::Error> {
     crate::windows::request::get_icon(ext, size)
 }
 
@@ -32,6 +30,8 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 /// Returns the path to the system icon.
 #[cfg(target_os = "linux")]
 pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
+    use error::Error;
+
     crate::linux::request::get_icon_as_file(ext, size)
 }
 
@@ -44,13 +44,13 @@ pub fn init() {
 /// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
 /// Returns the icon formatted as png as byte buffer.
 #[cfg(target_os = "macos")]
-pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, error::Error> {
     crate::macos::request::get_icon(ext, size.into())
 }
 
 /// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
 /// Returns the path to the system icon.
 #[cfg(target_os = "macos")]
-pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
+pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, error::Error> {
     crate::macos::request::get_icon_as_file(ext, size.into())
 }
