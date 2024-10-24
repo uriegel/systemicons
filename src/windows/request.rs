@@ -13,7 +13,7 @@ use windows::{
         }, WindowsAndMessaging::{GetIconInfo, HICON, ICONINFO}}
     }, 
 };
-use image::{ImageBuffer, ImageFormat, Rgba};
+use image::{ImageBuffer, ImageFormat, Rgba, RgbaImage};
 
 use crate::Error;
 
@@ -70,15 +70,35 @@ fn get_icon_from_hicon(icon: HICON) -> Result<Vec<u8>, Error> {
     let bytes = unsafe { std::slice::from_raw_parts(locked_memory, statstg.cbSize as usize) };
     let im = image::load_from_memory(&bytes)?; // Assuming bytes contains valid icon data
 
+
+    let image = im.into_rgba8();
+    let modified_image = change_black_to_white(image);
+
     // Don't call GlobalFree because of deleteOnRelease from CreateStreamOnHGlobal!!!
     let _ = unsafe { GlobalUnlock(hglobal) }; 
 
     let mut png_bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut png_bytes);
-    im.write_to(&mut cursor, ImageFormat::Png)?;
+    modified_image.write_to(&mut cursor, ImageFormat::Png)?;
 
     Ok(png_bytes)
 }
+
+fn change_black_to_white(image: RgbaImage) -> RgbaImage {
+    let mut modified_image: RgbaImage = image.clone(); // Create a mutable clone of the image
+
+    for (_x, _y, pixel) in modified_image.enumerate_pixels_mut() {
+        let channels = pixel.0;
+
+        // Check if the pixel is black (you can adjust the threshold as needed)
+        if channels[0] < 50 && channels[1] < 50 && channels[2] < 50 { // Threshold for black
+            *pixel = Rgba([0, 0, 0, 0]); // Set to white, keep original alpha
+        }
+    }
+
+    modified_image
+}
+
 
 fn get_icon_from_exe(icon: HICON) -> Result<Vec<u8>, Error> {
     let _icon_dropper = IconDropper(icon);
