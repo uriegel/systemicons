@@ -1,4 +1,8 @@
-use windows::{Win32::{Graphics::Gdi::{DeleteDC, DeleteObject, HBITMAP, HDC}, UI::WindowsAndMessaging::{DestroyIcon, HICON}}};
+use windows::Win32::{
+    Graphics::Gdi::{
+        DeleteDC, DeleteObject, HBITMAP, HDC
+    }, UI::WindowsAndMessaging::{DestroyIcon, HICON}
+};
 
 pub struct IconDropper(pub HICON);
 
