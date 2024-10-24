@@ -1,15 +1,18 @@
-use std::{io::Cursor, mem, ptr, slice, thread, time::Duration };
+use std::{alloc::GlobalAlloc, io::Cursor, mem, ptr, slice, thread, time::Duration };
 use windows::{
     core::PCWSTR,
     Win32::{
-        Foundation::FALSE, Graphics::Gdi::{
+        Foundation::{BOOL, FALSE, HGLOBAL}, Graphics::Gdi::{
             CreateCompatibleDC, CreateDIBSection, GetBitmapBits, GetDIBits, GetObjectW, SelectObject, BITMAP, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS, HBITMAP, HDC, RGBQUAD
-        }, Storage::FileSystem::FILE_ATTRIBUTE_NORMAL, UI::{
+        }, Storage::FileSystem::FILE_ATTRIBUTE_NORMAL, System::{Com::{IStream, StructuredStorage::CreateStreamOnHGlobal, STATFLAG_DEFAULT, STATSTG}, Memory::{self, GlobalLock, GMEM_MOVEABLE}, Ole::{IPicture, OleCreatePictureIndirect, PICTYPE_ICON}}, UI::{
             Shell::{
                 ExtractIconExW, SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON, SHGFI_SMALLICON, SHGFI_TYPENAME, SHGFI_USEFILEATTRIBUTES
         }, WindowsAndMessaging::{GetIconInfo, HICON, ICONINFO}}
     },
 };
+
+use windows::Win32::System::Ole::PICTDESC;
+
 use image::{ImageBuffer, ImageFormat, Rgba};
 
 use crate::Error;
@@ -22,7 +25,7 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
     let mut icon = if ext.to_lowercase().ends_with(".exe") {
         let icon = extract_icon(ext, size);
         if !icon.is_invalid() {
-            return get_icon_from_exe(icon)
+            return get_icon_from_hicon(icon)
         } 
         if let Some(pos) = ext.find(".exe") {
             get_icon_from_ext(&ext[pos..], size)
@@ -39,6 +42,47 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 }
 
 fn get_icon_from_hicon(icon: HICON) -> Result<Vec<u8>, Error> {
+    let _icon_dropper = IconDropper(icon);
+
+    let mut pictdesc = PICTDESC {
+        cbSizeofstruct: std::mem::size_of::<PICTDESC>() as u32,
+        picType: PICTYPE_ICON.0 as u32,
+        ..Default::default()
+    };
+
+    pictdesc.Anonymous.icon.hicon = icon;
+
+    let res: windows::core::Result<IPicture> = unsafe {
+        OleCreatePictureIndirect(&pictdesc, true)
+    };
+
+    let hglobal = unsafe { Memory::GlobalAlloc(GMEM_MOVEABLE, 0) }
+    
+        .unwrap();
+    
+    let strom = unsafe {
+        CreateStreamOnHGlobal(hglobal, BOOL(1))? // BOOL(1) -> TRUE means stream takes ownership
+    };
+
+    let mut statstg = STATSTG{
+        ..Default::default()
+    };
+
+    let hr = unsafe { res?.SaveAsFile(&strom, BOOL(1)) };
+    unsafe { strom.Stat(&mut statstg, STATFLAG_DEFAULT)? };
+    let locked_memory = unsafe { GlobalLock(hglobal) } as *const u8;
+    let bytes = unsafe { std::slice::from_raw_parts(locked_memory, statstg.cbSize as usize) };
+
+ 
+    let im = image::load_from_memory(&bytes)?; // Assuming bytes contains valid icon data
+    let mut png_bytes: Vec<u8> = Vec::new();
+    let mut cursor = Cursor::new(&mut png_bytes);
+    im.write_to(&mut cursor, ImageFormat::Png)?;
+
+    Ok(png_bytes)
+}
+
+fn _get_icon_from_hicon(icon: HICON) -> Result<Vec<u8>, Error> {
     let _icon_dropper = IconDropper(icon);
 
     let mut icon_info = ICONINFO {
