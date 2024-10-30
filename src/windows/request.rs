@@ -3,16 +3,16 @@ use windows::{
     core::PCWSTR,
     Win32::{
         Foundation::FALSE, Graphics::Gdi::{
-            DeleteObject, GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER, HBITMAP
+            GetBitmapBits, GetObjectW, BITMAP, BITMAPINFOHEADER, HBITMAP
         }, Storage::FileSystem::FILE_ATTRIBUTE_NORMAL, UI::{
             Shell::{
                 ExtractIconExW, SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON, SHGFI_SMALLICON, SHGFI_TYPENAME, SHGFI_USEFILEATTRIBUTES
-        }, WindowsAndMessaging::{DestroyIcon, GetIconInfo, HICON, ICONINFO}}
+        }, WindowsAndMessaging::{GetIconInfo, HICON, ICONINFO}}
     },
 };
 use image::ImageFormat;
 
-use crate::Error;
+use crate::{windows::drop::{BitmapDropper, IconDropper}, Error};
 
 pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
     let mut icon = if ext.to_lowercase().ends_with(".exe") {
@@ -32,6 +32,8 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
         icon = extract_icon("C:\\Windows\\system32\\SHELL32.dll", size);
     }
 
+    let _icon_dropper = IconDropper(icon);
+
     let mut icon_info = ICONINFO {
         fIcon: FALSE,
         hbmColor: HBITMAP::default(),
@@ -39,10 +41,10 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
         xHotspot: 0,
         yHotspot: 0,
     };
-    unsafe {
-        GetIconInfo(icon, &mut icon_info)?;
-        let _ = DestroyIcon(icon);
-    }
+    unsafe { GetIconInfo(icon, &mut icon_info)?; }
+
+    let _color_dropper = BitmapDropper(icon_info.hbmColor);
+    let _mask_dropper = BitmapDropper(icon_info.hbmMask);
 
     let mut bmp_color = BITMAP {
         bmBits: ptr::null_mut(),
@@ -150,11 +152,6 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
     let mut png_bytes: Vec<u8> = Vec::new();
     let mut cursor = Cursor::new(&mut png_bytes);
     im.write_to(&mut cursor, ImageFormat::Png)?;
-
-    unsafe {
-        let _ = DeleteObject(icon_info.hbmColor);
-        let _ = DeleteObject(icon_info.hbmMask);
-    }
 
     Ok(png_bytes)
 }

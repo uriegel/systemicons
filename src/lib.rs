@@ -11,62 +11,6 @@ use image::ImageError;
 use ::windows::core::Error as WinError;
 use std::{fmt, str::Utf8Error};
 
-/// Inner Error type of possible Error
-pub enum InnerError {
-    IoError(std::io::Error),
-    Utf8Error(Utf8Error),
-    GtkInitError,
-    #[cfg(target_os = "windows")]
-    ImageError(ImageError),
-    #[cfg(target_os = "windows")]
-    WinError(WinError),
-}
-
-/// Possible Error
-pub struct Error {
-    pub message: String,
-    pub inner_error: InnerError,
-}
-
-impl From<std::io::Error> for Error {
-    fn from(error: std::io::Error) -> Self {
-        Error {
-            message: error.to_string(),
-            inner_error: InnerError::IoError(error),
-        }
-    }
-}
-
-impl From<Utf8Error> for Error {
-    fn from(error: Utf8Error) -> Self {
-        Error {
-            message: error.to_string(),
-            inner_error: InnerError::Utf8Error(error),
-        }
-    }
-}
-
-impl fmt::Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {:?})", self.message, self.inner_error)
-    }
-}
-
-impl fmt::Debug for InnerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let res = match self {
-            &InnerError::GtkInitError => "GtkInitError".to_string(),
-            &InnerError::Utf8Error(_) => "Utf8Error".to_string(),
-            &InnerError::IoError(_) => "IoError".to_string(),
-            #[cfg(target_os = "windows")]
-            &InnerError::ImageError(_) => "ImageError".to_string(),
-            #[cfg(target_os = "windows")]
-            &InnerError::WinError(_) => "WinError".to_string(),
-        };
-        write!(f, "(Error type: {}", res)
-    }
-}
-
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "macos")]
@@ -110,4 +54,60 @@ pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
 #[cfg(target_os = "macos")]
 pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
     macos::request::get_icon_as_file(ext, size.into())
+}
+
+/// Possible Error
+pub struct Error {
+    pub message: String,
+    pub inner_error: InnerError,
+}
+
+/// Inner Error type of possible Error
+pub enum InnerError {
+    IoError(std::io::Error),
+    Utf8Error(Utf8Error),
+    GtkInitError,
+    #[cfg(target_os = "windows")]
+    ImageError(ImageError),
+    #[cfg(target_os = "windows")]
+    WinError(WinError),
+}
+
+impl From<std::io::Error> for Error {
+    fn from(error: std::io::Error) -> Self {
+        Error {
+            message: error.to_string(),
+            inner_error: InnerError::IoError(error),
+        }
+    }
+}
+
+impl From<Utf8Error> for Error {
+    fn from(error: Utf8Error) -> Self {
+        Error {
+            message: error.to_string(),
+            inner_error: InnerError::Utf8Error(error),
+        }
+    }
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {:?})", self.message, self.inner_error)
+    }
+}
+
+impl fmt::Debug for InnerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let res = match self {
+            &InnerError::GtkInitError => "GtkInitError".to_string(),
+            &InnerError::Utf8Error(_) => "Utf8Error".to_string(),
+            &InnerError::IoError(_) => "IoError".to_string(),
+            #[cfg(target_os = "windows")]
+            &InnerError::ImageError(_) => "ImageError".to_string(),
+            #[cfg(target_os = "windows")]
+            &InnerError::WinError(_) => "WinError".to_string(),
+        };
+        write!(f, "(Error type: {}", res)
+    }
 }
