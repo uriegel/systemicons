@@ -1,5 +1,4 @@
 pub mod request;
-mod drop;
 
 use image::ImageError;
 use windows::core::Error as WinError;

@@ -5,54 +5,6 @@
 //! Windows and Linux (GTK) are supported.
 //!
 //! When you specify an absolute path to a .exe file, then the icon is loaded from resource, if the exe contains an icon resource.
-
-#[cfg(target_os = "linux")]
-mod linux;
-#[cfg(target_os = "macos")]
-mod macos;
-#[cfg(target_os = "windows")]
-mod windows;
-
-/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
-/// Returns the icon formatted as png as byte buffer.
-#[cfg(target_os = "linux")]
-pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
-    crate::linux::request::get_icon(ext, size)
-}
-#[cfg(target_os = "windows")]
-pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
-    crate::windows::request::get_icon(ext, size)
-}
-
-/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
-/// Returns the path to the system icon.
-#[cfg(target_os = "linux")]
-pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
-    use error::Error;
-
-    crate::linux::request::get_icon_as_file(ext, size)
-}
-
-/// In a non GTK program you have to initialize GTK when getting system icons (Linux)-
-#[cfg(target_os = "linux")]
-pub fn init() {
-    crate::linux::request::init()
-}
-
-/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
-/// Returns the icon formatted as png as byte buffer.
-#[cfg(target_os = "macos")]
-pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
-    crate::macos::request::get_icon(ext, size.into())
-}
-
-/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
-/// Returns the path to the system icon.
-#[cfg(target_os = "macos")]
-pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
-    crate::macos::request::get_icon_as_file(ext, size.into())
-}
-
 #[cfg(target_os = "windows")]
 use image::ImageError;
 #[cfg(target_os = "windows")]
@@ -63,9 +15,7 @@ use std::{fmt, str::Utf8Error};
 pub enum InnerError {
     IoError(std::io::Error),
     Utf8Error(Utf8Error),
-    #[cfg(target_os = "linux")]
     GtkInitError,
-    WinResult,
     #[cfg(target_os = "windows")]
     ImageError(ImageError),
     #[cfg(target_os = "windows")]
@@ -96,15 +46,6 @@ impl From<Utf8Error> for Error {
     }
 }
 
-impl From<&str> for Error {
-    fn from(error: &str) -> Self {
-        Error {
-            message: error.to_string(),
-            inner_error: InnerError::WinResult,
-        }
-    }
-}
-
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {:?})", self.message, self.inner_error)
@@ -114,7 +55,6 @@ impl fmt::Debug for Error {
 impl fmt::Debug for InnerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let res = match self {
-            #[cfg(target_os = "linux")]
             &InnerError::GtkInitError => "GtkInitError".to_string(),
             &InnerError::Utf8Error(_) => "Utf8Error".to_string(),
             &InnerError::IoError(_) => "IoError".to_string(),
@@ -122,10 +62,52 @@ impl fmt::Debug for InnerError {
             &InnerError::ImageError(_) => "ImageError".to_string(),
             #[cfg(target_os = "windows")]
             &InnerError::WinError(_) => "WinError".to_string(),
-            #[cfg(target_os = "windows")]
-            &InnerError::WinResult => "Windows Result".to_string(),
         };
         write!(f, "(Error type: {}", res)
     }
 }
 
+#[cfg(target_os = "linux")]
+mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(target_os = "windows")]
+mod windows;
+
+/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
+/// Returns the icon formatted as png as byte buffer.
+#[cfg(target_os = "linux")]
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+    linux::request::get_icon(ext, size)
+}
+#[cfg(target_os = "windows")]
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+    windows::request::get_icon(ext, size)
+}
+
+/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
+/// Returns the path to the system icon.
+#[cfg(target_os = "linux")]
+pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
+    linux::request::get_icon_as_file(ext, size)
+}
+
+/// In a non GTK program you have to initialize GTK when getting system icons (Linux)-
+#[cfg(target_os = "linux")]
+pub fn init() {
+    linux::request::init()
+}
+
+/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
+/// Returns the icon formatted as png as byte buffer.
+#[cfg(target_os = "macos")]
+pub fn get_icon(ext: &str, size: i32) -> Result<Vec<u8>, Error> {
+    macos::request::get_icon(ext, size.into())
+}
+
+/// Retrieving system icon. You have to specify the file extension and desired icon size (like 16, 32 or 64).
+/// Returns the path to the system icon.
+#[cfg(target_os = "macos")]
+pub fn get_icon_as_file(ext: &str, size: i32) -> Result<String, Error> {
+    macos::request::get_icon_as_file(ext, size.into())
+}
