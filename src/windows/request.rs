@@ -237,6 +237,8 @@ fn write_icon_data_to_memory(mem: &mut [u8], h_bitmap: HBITMAP, bmp: &BITMAP, bi
         // towards the top of the bitmap. Also, the bitmaps are stored in packed
         // in memory - scanlines are NOT 32bit aligned, just 1-after-the-other
         let mut pos = 0;
+        let nd4 = |x: i32| (x + 3) & !3;
+        let amount_to_pad = (nd4(bmp.bmWidthBytes) - bmp.bmWidthBytes) as usize;
         for i in (0..bmp.bmHeight).rev() {
             // Write the bitmap scanline
             
@@ -244,10 +246,10 @@ fn write_icon_data_to_memory(mem: &mut [u8], h_bitmap: HBITMAP, bmp: &BITMAP, bi
             pos += bmp.bmWidthBytes as usize;
 
             // extend to a 32bit boundary (in the file) if necessary
-            if bmp.bmWidthBytes & 3 != 0 {
+            if amount_to_pad != 0 {
                 let padding: [u8; 4] = [0; 4];
-                ptr::copy_nonoverlapping(padding.as_ptr(), mem[pos..].as_mut_ptr(), (4 - bmp.bmWidthBytes) as usize); 
-                pos += 4 - bmp.bmWidthBytes as usize;
+                ptr::copy_nonoverlapping(padding.as_ptr(), mem[pos..].as_mut_ptr(), amount_to_pad); 
+                pos += amount_to_pad;
             }
         }
     }
