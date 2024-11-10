@@ -245,15 +245,10 @@ fn write_icon_data_to_memory(mem: &mut [u8], h_bitmap: HBITMAP, bmp: &BITMAP, bi
             pos += bmp.bmWidthBytes as usize;
 
             // extend to a 32bit boundary (in the file) if necessary
-            if bmp.bmWidthBytes % 3 == 0 {
+            if bmp.bmWidthBytes & 3 != 0 {
                 let padding: [u8; 4] = [0; 4];
-
-                // Next devisor of 4
-                let nd4 = |x: i32| (x + 3) & !3;
-
-                let amount_to_pad = (nd4(bmp.bmWidthBytes) - bmp.bmWidthBytes) as usize;
-                ptr::copy_nonoverlapping(padding.as_ptr(), mem[pos..].as_mut_ptr(), amount_to_pad); 
-                pos += amount_to_pad;
+                ptr::copy_nonoverlapping(padding.as_ptr(), mem[pos..].as_mut_ptr(), (4 - bmp.bmWidthBytes) as usize); 
+                pos += 4 - bmp.bmWidthBytes as usize;
             }
         }
     }
