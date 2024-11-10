@@ -179,7 +179,8 @@ fn get_icon_from_ext(ext: &str, size: i32) -> HICON {
                     SHGFI_SMALLICON
                 },
         ) };
-        if !file_info.hIcon.is_invalid() {
+        let h_icon = file_info.hIcon;
+        if !h_icon.is_invalid() {
             break;
         } else {
             let millis = Duration::from_millis(30);
