@@ -1,6 +1,6 @@
 [package]
 name = "systemicons"
-version = "0.9.12"
+version = "0.9.13"
 description = "With this lib you can retrive the system icon which is associated to a certain file extension. The icon will be in the .png format. Windows, macOS and Linux (GTK) are supported."
 authors = [
     "Uwe Riegel <uriegel@hotmail.de>",
@@ -28,7 +28,7 @@ windows = { version = "0.58.0", features = [
 image = { version = "0.25.5", default-features = false, features = [ "ico" ]}
 
 [target.'cfg(target_os="macos")'.dependencies]
-cocoa = "0.24.0"
+cocoa = "0.26.0"
 objc = "0.2.7"
 
 [dev-dependencies]
